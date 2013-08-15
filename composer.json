@@ -1,0 +1,17 @@
+{
+    "name": "brianlmoon/gearmanmanager",
+    "description": "Gearman Manager",
+
+    "license": "BSD-3-Clause",
+
+    "authors": [{
+        "name": "Brian Moon"
+    }],
+
+    "autoload": {
+        "psr-0": {
+            "GearmanManager": "src/"
+        }
+    }
+}
+
