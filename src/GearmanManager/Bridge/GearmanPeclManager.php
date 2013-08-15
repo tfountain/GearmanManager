@@ -92,6 +92,31 @@ class GearmanPeclManager extends GearmanManager {
     }
 
     /**
+     * Initialises the job function
+     *
+     * Returns an instance of the $func class if it is an object,
+     * otherwise true if it's a valid function, or false if doesn't
+     * exist
+     */
+    protected function init_job($job_name, $func){
+        require_once $this->functions[$job_name]["path"];
+
+        if(class_exists($func) && method_exists($func, "run")){
+
+            $this->log("Creating a $func object", GearmanManager::LOG_LEVEL_WORKER_INFO);
+            $ns_func = "\\$func";
+            return new $ns_func();
+
+        } elseif(!function_exists($func)) {
+
+            $this->log("Function $func not found");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Wrapper function handler for all registered functions
      * This allows us to do some nice logging when jobs are started/finished
      */
@@ -120,20 +145,15 @@ class GearmanPeclManager extends GearmanManager {
                 return;
             }
 
-            require_once $this->functions[$job_name]["path"];
+            if (($instanceOrSuccess = $this->init_func($job_name, $func)) !== false) {
+                if (is_object($instanceOrSuccess)) {
+                    $objects[$job_name] = $instanceOrSuccess;
+                }
 
-            if(class_exists($func) && method_exists($func, "run")){
-
-                $this->log("Creating a $func object", GearmanManager::LOG_LEVEL_WORKER_INFO);
-                $ns_func = "\\$func";
-                $objects[$job_name] = new $ns_func();
-
-            } elseif(!function_exists($func)) {
-
+            } else {
                 $this->log("Function $func not found");
                 return;
             }
-
         }
 
         $this->log("($h) Starting Job: $job_name", GearmanManager::LOG_LEVEL_WORKER_INFO);
@@ -224,6 +244,3 @@ class GearmanPeclManager extends GearmanManager {
     }
 
 }
-
-?>
-
